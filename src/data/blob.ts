@@ -328,13 +328,17 @@ export const SVGStringToFile = (SVGString: string, filename: string = "") => {
   }) as File & { type: typeof MIME_TYPES.svg };
 };
 
-export const getFileFromEvent = async (
+export const getFilesFromEvent = async (
   event: React.DragEvent<HTMLDivElement>,
 ) => {
-  const file = event.dataTransfer.files.item(0);
+  const files = event.dataTransfer.files;
   const fileHandle = await getFileHandle(event);
+  const normalizedFiles = Array.from(files).map(async (file: File) => {
+    return await normalizeFile(file);
+  });
 
-  return { file: file ? await normalizeFile(file) : null, fileHandle };
+  const finalFiles = await Promise.all(normalizedFiles);
+  return { files: files ? finalFiles : null, fileHandle };
 };
 
 export const getFileHandle = async (
