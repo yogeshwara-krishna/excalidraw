@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { createRef, useContext, useEffect, useRef } from "react";
 import { flushSync } from "react-dom";
 
 import { RoughCanvas } from "roughjs/bin/canvas";
@@ -423,7 +423,6 @@ class App extends React.Component<AppProps, AppState> {
   actionManager: ActionManager;
   device: Device = deviceContextInitialValue;
   detachIsMobileMqHandler?: () => void;
-
   private excalidrawContainerRef = React.createRef<HTMLDivElement>();
 
   public static defaultProps: Partial<AppProps> = {
@@ -451,7 +450,7 @@ class App extends React.Component<AppProps, AppState> {
   lastPointerDown: React.PointerEvent<HTMLElement> | null = null;
   lastPointerUp: React.PointerEvent<HTMLElement> | PointerEvent | null = null;
   lastViewportPosition = { x: 0, y: 0 };
-
+  private arrowDict: React.RefObject<HTMLObjectElement>;
   constructor(props: AppProps) {
     super(props);
     const defaultAppState = getDefaultAppState();
@@ -536,6 +535,7 @@ class App extends React.Component<AppProps, AppState> {
 
     this.actionManager.registerAction(createUndoAction(this.history));
     this.actionManager.registerAction(createRedoAction(this.history));
+    this.arrowDict = React.createRef<HTMLObjectElement>();
   }
 
   private renderCanvas() {
@@ -548,6 +548,12 @@ class App extends React.Component<AppProps, AppState> {
     const canvasWidth = canvasDOMWidth * canvasScale;
     const canvasHeight = canvasDOMHeight * canvasScale;
     if (viewModeEnabled) {
+      document.addEventListener("keydown", (e) =>
+        this.handleKeyPressDown(e, this.arrowDict),
+      );
+      document.addEventListener("keyup", (e) =>
+        this.handleKeyPressUp(e, this.arrowDict),
+      );
       return (
         <canvas
           className="excalidraw__canvas"
@@ -3882,6 +3888,81 @@ class App extends React.Component<AppProps, AppState> {
     invalidateContextMenu = true;
   };
 
+  private handleKeyPressDown = (event: any, arrowKeysPressed: any) => {
+    if (arrowKeysPressed?.current) arrowKeysPressed.current[event.key] = "1";
+    console.log(arrowKeysPressed);
+    // Check for diagonal movement
+    // if (
+    //   arrowKeysPressed.current.has("ArrowUp") &&
+    //   arrowKeysPressed.current.has("ArrowRight")
+    // ) {
+    //   console.log("Diagonal Up-Right");
+    //   // Perform your diagonal movement logic here
+    // } else if (
+    //   arrowKeysPressed.current.has("ArrowUp") &&
+    //   arrowKeysPressed.current.has("ArrowLeft")
+    // ) {
+    //   console.log("Diagonal Up-Left");
+    //   // Perform your diagonal movement logic here
+    // } else if (
+    //   arrowKeysPressed.current.has("ArrowDown") &&
+    //   arrowKeysPressed.current.has("ArrowRight")
+    // ) {
+    //   console.log("Diagonal Down-Right");
+    //   // Perform your diagonal movement logic here
+    // } else if (
+    //   arrowKeysPressed.current.has("ArrowDown") &&
+    //   arrowKeysPressed.current.has("ArrowLeft")
+    // ) {
+    //   console.log("Diagonal Down-Left");
+    //   // Perform your diagonal movement logic here
+    // } else if (arrowKeysPressed.current.has("ArrowDown")) {
+    //   console.log("Down Movement");
+    //   // Perform regular movement logic here
+    // } else if (arrowKeysPressed.current.has("ArrowUp")) {
+    //   console.log("Up Movement");
+    //   // Perform regular movement logic here
+    // } else if (arrowKeysPressed.current.has("ArrowLeft")) {
+    //   console.log("Left Movement");
+    //   // Perform regular movement logic here
+    // } else if (arrowKeysPressed.current.has("ArrowRight")) {
+    //   console.log("Right Movement");
+    //   // Perform regular movement logic here
+    // }
+  };
+
+  // switch (event.key) {
+  //   case "ArrowLeft": {
+  //     this.translateCanvas((state) => ({
+  //       scrollX: state.scrollX - 50,
+  //     }));
+  //     return;
+  //   }
+  //   case "ArrowRight": {
+  //     this.translateCanvas((state) => ({
+  //       scrollX: state.scrollX + 50,
+  //     }));
+  //     return;
+  //   }
+  //   case "ArrowDown": {
+  //     this.translateCanvas((state) => ({
+  //       scrollY: state.scrollY + 50,
+  //     }));
+  //     return;
+  //   }
+  //   case "ArrowUp": {
+  //     this.translateCanvas((state) => ({
+  //       scrollY: state.scrollY - 50,
+  //     }));
+  //     return;
+  //   }
+  // }
+
+  private handleKeyPressUp = (event: any, arrowKeysPressed: any) => {
+    if (arrowKeysPressed?.current) {
+      delete arrowKeysPressed?.current[event.key];
+    }
+  };
   handleHoverSelectedLinearElement(
     linearElementEditor: LinearElementEditor,
     scenePointerX: number,
